@@ -1,0 +1,32 @@
+#include <windows.h>
+#include "resource.h"
+#include "../version.h"
+
+IDI_KODO ICON "../../assets/kodo.ico"
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "Kodo.manifest"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION KODO_VERSION_MAJOR, KODO_VERSION_MINOR, KODO_VERSION_PATCH, 0
+PRODUCTVERSION KODO_VERSION_MAJOR, KODO_VERSION_MINOR, KODO_VERSION_PATCH, 0
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_APP
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "VitomDev"
+            VALUE "FileDescription", "Kodo QR Instant"
+            VALUE "FileVersion", KODO_VERSION_STRING
+            VALUE "InternalName", "Kodo"
+            VALUE "LegalCopyright", "Copyright (c) 2026 VitomDev. MIT License."
+            VALUE "OriginalFilename", "Kodo.exe"
+            VALUE "ProductName", "Kodo QR Instant"
+            VALUE "ProductVersion", KODO_VERSION_STRING
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
