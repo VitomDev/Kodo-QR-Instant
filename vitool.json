@@ -1,0 +1,9 @@
+{
+  "appId": "{B3E5A1C7-2D84-4F6B-9A0E-7C1D5F38E462}",
+  "name": "Kodo QR Instant",
+  "category": "Utilities",
+  "icon": "assets/kodo.png",
+  "screenshots": [],
+  "installer": "KodoSetup.exe",
+  "exe": "Kodo.exe"
+}
