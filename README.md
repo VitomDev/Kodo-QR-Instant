@@ -37,6 +37,8 @@ Kodo lives in the notification area, uses almost no memory and works **offline**
 
 Download `KodoSetup.exe` from [Releases](https://github.com/VitomDev/Kodo-QR-Instant/releases/latest) and run it.
 
+> 🧰 **Recommended:** install it with [Vitool Box](https://github.com/VitomDev/Vitool-Box), which keeps all VitomDev apps in one place and installs or removes them with a switch.
+
 - Per-user install, no admin rights needed
 - Kodo starts right away and its icon appears in the notification area
 - It starts with Windows from then on
@@ -142,4 +144,4 @@ Feel free to reach out or follow me:
 - 🐙 GitHub: [@VitomDev](https://github.com/VitomDev)
 - 🐦 Twitter/X: [@VitomDev](https://twitter.com/VitomDev)
 - 🎮 Twitch: [@VitomDev](https://www.twitch.tv/VitomDev)
-- 💼 LinkedIn: [Víctor Escós](https://www.linkedin.com/in/víctor-escós-batalla/)
+- 💼 LinkedIn: [VitomDev](https://www.linkedin.com/in/víctor-escós-batalla/)
