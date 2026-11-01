@@ -3,7 +3,9 @@
   "name": "Kodo QR Instant",
   "category": "Utilities",
   "icon": "assets/kodo.png",
-  "screenshots": [],
+  "screenshots": [
+    "assets/screenshots/screenshot-1.png"
+  ],
   "installer": "KodoSetup.exe",
   "exe": "Kodo.exe",
   "settings": [
