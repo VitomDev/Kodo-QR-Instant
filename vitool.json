@@ -5,5 +5,9 @@
   "icon": "assets/kodo.png",
   "screenshots": [],
   "installer": "KodoSetup.exe",
-  "exe": "Kodo.exe"
+  "exe": "Kodo.exe",
+  "settings": [
+    "%LOCALAPPDATA%\\Kodo QR Instant",
+    "HKCU\\Software\\Kodo QR Instant"
+  ]
 }
