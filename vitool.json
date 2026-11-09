@@ -4,7 +4,8 @@
   "category": "Utilities",
   "icon": "assets/kodo.png",
   "screenshots": [
-    "assets/screenshots/screenshot-1.png"
+    "assets/screenshots/screenshot-1.png",
+    "assets/screenshots/screenshot-2.png"
   ],
   "installer": "KodoSetup.exe",
   "exe": "Kodo.exe",

@@ -8,6 +8,8 @@ Press a shortcut, drag over a QR code anywhere on your screen, and see what's in
 
 Kodo lives in the notification area, uses almost no memory and works **offline**, on your PC.
 
+<p align="center"><img src="assets/screenshots/screenshot-1.png" width="400" alt="Create a QR code">&nbsp;&nbsp;<img src="assets/screenshots/screenshot-2.png" width="420" alt="Read a QR code"></p>
+
 ---
 
 ## 🚀 Features
