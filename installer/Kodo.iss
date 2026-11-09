@@ -42,6 +42,7 @@ UninstallDisplayName={#AppName}
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
+LicenseFile=..\LICENSE
 ; Kodo is closed by the code below, through its own window.
 CloseApplications=no
 
