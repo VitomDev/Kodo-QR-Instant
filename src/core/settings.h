@@ -18,6 +18,7 @@ inline constexpr wchar_t kStartupApprovedKey[] =
 struct Settings {
     Hotkey readHotkey{MOD_CONTROL | MOD_SHIFT, 'Q'};
     Hotkey createHotkey{MOD_CONTROL | MOD_SHIFT, 'G'};
+    Hotkey cameraHotkey{MOD_CONTROL | MOD_SHIFT | MOD_ALT, 'Q'};
     bool keepHistory = true;
 
     // `keyPath` is relative to HKEY_CURRENT_USER; tests use a scratch key.

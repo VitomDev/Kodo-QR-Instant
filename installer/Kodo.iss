@@ -6,7 +6,7 @@
 ;
 ; Built by build.ps1, which passes /DBuildDir=<folder with Kodo.exe>.
 
-#define AppVersion "1.0.0"
+#define AppVersion "1.1.0"
 #define AppName "Kodo QR Instant"
 #define RunKey "Software\Microsoft\Windows\CurrentVersion\Run"
 #define StartupApprovedKey "Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run"

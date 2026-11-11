@@ -18,6 +18,7 @@ constexpr wchar_t kClassName[] = L"KodoSettings";
 enum ControlId {
     kReadShortcut = 100,
     kCreateShortcut,
+    kCameraShortcut,
     kHistoryToggle,
     kClearHistory,
     kAutostartToggle,
@@ -112,6 +113,8 @@ void Layout(State& state) {
     text(padding, y, width - 2 * padding, scale(24), L"Shortcuts", TextStyle::Caption);
     y += scale(24);
     labelRow(y, L"Read a QR code on screen", kReadShortcut, fieldWidth, fieldHeight);
+    y += row;
+    labelRow(y, L"Read a QR code with the camera", kCameraShortcut, fieldWidth, fieldHeight);
     y += row;
     labelRow(y, L"Create a QR from the clipboard", kCreateShortcut, fieldWidth, fieldHeight);
     y += row + scale(kSectionGap);
@@ -212,7 +215,7 @@ void DrawControl(State& state, const DRAWITEMSTRUCT& item) {
     const ButtonFonts fonts{state.textFont, state.iconFont};
     const int radius = Scale(state.window, kRadius);
 
-    if (id == kReadShortcut || id == kCreateShortcut) {
+    if (id == kReadShortcut || id == kCreateShortcut || id == kCameraShortcut) {
         // Input-like field that records the next key combination.
         HDC dc = item.hDC;
         const RECT& rect = item.rcItem;
@@ -220,7 +223,9 @@ void DrawControl(State& state, const DRAWITEMSTRUCT& item) {
         FillRect(dc, &rect, state.background);
         FillRounded(dc, rect, IsHot(item.hwndItem) || recording ? theme.hover : theme.pressed, radius);
         OutlineRounded(dc, rect, recording ? theme.accent : theme.divider, radius, recording ? 2 : 1);
-        const Hotkey& hotkey = id == kReadShortcut ? state.settings.readHotkey : state.settings.createHotkey;
+        const Hotkey& hotkey = id == kReadShortcut ? state.settings.readHotkey
+                               : id == kCreateShortcut ? state.settings.createHotkey
+                                                       : state.settings.cameraHotkey;
         const std::wstring label = recording ? L"Press a shortcut…" : ToString(hotkey);
         SetBkMode(dc, TRANSPARENT);
         HGDIOBJ previous = SelectObject(dc, state.textFont);
@@ -255,12 +260,13 @@ void SetStatus(State& state, const std::wstring& status, bool error = true) {
 // --- Actions ---------------------------------------------------------------------
 
 void Save(State& state) {
-    if (!state.settings.readHotkey.IsValid() || !state.settings.createHotkey.IsValid()) {
+    if (!state.settings.readHotkey.IsValid() || !state.settings.createHotkey.IsValid() || !state.settings.cameraHotkey.IsValid()) {
         SetStatus(state, L"Shortcuts need Ctrl, Alt or Shift plus a key.");
         return;
     }
-    if (state.settings.readHotkey == state.settings.createHotkey) {
-        SetStatus(state, L"Read and Create need different shortcuts.");
+    if (state.settings.readHotkey == state.settings.createHotkey || state.settings.readHotkey == state.settings.cameraHotkey ||
+        state.settings.createHotkey == state.settings.cameraHotkey) {
+        SetStatus(state, L"Each action needs its own shortcut.");
         return;
     }
     std::wstring error;
@@ -295,7 +301,9 @@ LRESULT CALLBACK ShortcutProc(HWND field, UINT message, WPARAM wParam, LPARAM lP
                         SetStatus(state, L"Use Ctrl, Alt or Shift together with a key.");
                         return 0;
                     }
-                    (id == kReadShortcut ? state.settings.readHotkey : state.settings.createHotkey) = hotkey;
+                    (id == kReadShortcut     ? state.settings.readHotkey
+                     : id == kCreateShortcut ? state.settings.createHotkey
+                                             : state.settings.cameraHotkey) = hotkey;
                     state.recording = 0;
                     SetStatus(state, L"");
                 }
@@ -329,11 +337,10 @@ LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lPa
                 state->done = true;
             } else if (id == kSave) {
                 Save(*state);
-            } else if (id == kReadShortcut || id == kCreateShortcut) {
+            } else if (id == kReadShortcut || id == kCreateShortcut || id == kCameraShortcut) {
                 state->recording = state->recording == id ? 0 : id;
                 SetFocus(GetDlgItem(window, id));
-                InvalidateRect(GetDlgItem(window, kReadShortcut), nullptr, FALSE);
-                InvalidateRect(GetDlgItem(window, kCreateShortcut), nullptr, FALSE);
+                for (int field : {kReadShortcut, kCreateShortcut, kCameraShortcut}) InvalidateRect(GetDlgItem(window, field), nullptr, FALSE);
             } else if (id == kHistoryToggle) {
                 state->settings.keepHistory = !state->settings.keepHistory;
                 InvalidateRect(GetDlgItem(window, id), nullptr, FALSE);
@@ -419,6 +426,7 @@ void ShowSettingsDialog(HINSTANCE instance, HWND owner, const Settings& current,
         return control;
     };
     SetWindowSubclass(add(kReadShortcut), ShortcutProc, 0, reinterpret_cast<DWORD_PTR>(&state));
+    SetWindowSubclass(add(kCameraShortcut), ShortcutProc, 0, reinterpret_cast<DWORD_PTR>(&state));
     SetWindowSubclass(add(kCreateShortcut), ShortcutProc, 0, reinterpret_cast<DWORD_PTR>(&state));
     add(kHistoryToggle);
     add(kClearHistory);

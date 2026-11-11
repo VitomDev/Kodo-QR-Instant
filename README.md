@@ -20,12 +20,13 @@ Kodo lives in the notification area, uses almost no memory and works **offline**
   - 📋 **Text**: copied straight to your clipboard
   - 📧 Emails, 📞 phone numbers, 💬 text messages, 👤 contacts (vCard / MeCard) and 📍 locations too
   - Several codes in the selection? Go through them with **Next code**
+- 📷 **Read with the camera** (`Ctrl + Shift + Alt + Q`): a window opens your default camera; hold up a QR code (on your phone, a ticket, a poster…) and it's read the moment it's in view
 - ✨ **Create a QR code from the clipboard** (`Ctrl + Shift + G`): copy any text or link, press the shortcut and the code is there
   - 🖼️ **Copy image** to paste it into a chat or a document, or 💾 **Save PNG**
 - 🧩 **Templates**: create codes for a 📶 **Wi-Fi network**, a 👤 **contact** (vCard) or an 📧 **email**, with a live preview
 - 🕘 **History**: the codes you read and create, to show them again or copy their text. Stays on your PC, and you can turn it off
 - 🖱️ Left-click the tray icon to read a code; right-click for the menu
-- 🔒 100% offline: screenshots and codes never leave your PC. No telemetry, no accounts
+- 🔒 100% offline: screenshots, camera images and codes never leave your PC. No telemetry, no accounts
 - 🌍 Accents, emoji and any alphabet (日本語, Русский…) both when reading and creating
 - 🌗 Reads dark-mode codes (light on dark), rotated and tiny on-screen codes
 - 🖥️ Multiple monitors, mixed DPI scaling and monitors placed left of or above the main one
@@ -54,6 +55,7 @@ Uninstalling (Settings → Apps) removes Kodo, its startup entry, its settings a
 | Action | How |
 | --- | --- |
 | Read a QR code | `Ctrl + Shift + Q`, or left-click the tray icon, then drag over the code |
+| Read with the camera | `Ctrl + Shift + Alt + Q`, or right-click the tray icon → **Read QR with camera** |
 | Create a QR from the clipboard | `Ctrl + Shift + G`, or right-click the tray icon → **Create QR from clipboard** |
 | Wi-Fi, contact or email code | Right-click the tray icon → **Create QR code…** and pick a template |
 | History | Right-click the tray icon → **History** |
@@ -114,6 +116,7 @@ It downloads the pinned dependencies into `.deps/` (Windows SDK, CMake, Ninja an
 
 - [ZXing-C++](https://github.com/zxing-cpp/zxing-cpp) — reading and creating QR codes
 - [Windows Imaging Component](https://learn.microsoft.com/windows/win32/wic/-wic-about-windows-imaging-codec) — PNG images, built into Windows
+- [Media Foundation](https://learn.microsoft.com/windows/win32/medfound/microsoft-media-foundation-sdk) — the camera, built into Windows
 
 See [third-party notices](THIRD-PARTY-NOTICES.md) for licenses.
 

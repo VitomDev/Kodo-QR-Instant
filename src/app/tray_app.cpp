@@ -25,8 +25,9 @@ constexpr UINT WM_APP_OPEN_SETTINGS = WM_APP + 14;
 
 constexpr int kReadHotkeyId = 1;
 constexpr int kCreateHotkeyId = 2;
+constexpr int kCameraHotkeyId = 3;
 
-enum MenuId { kMenuRead = 1, kMenuCreateClipboard, kMenuCreate, kMenuHistory, kMenuSettings, kMenuAutostart, kMenuExit };
+enum MenuId { kMenuRead = 1, kMenuCamera, kMenuCreateClipboard, kMenuCreate, kMenuHistory, kMenuSettings, kMenuAutostart, kMenuExit };
 
 // Gives memory used by a capture back to the system once Kodo is idle again.
 void TrimWorkingSet() { SetProcessWorkingSetSize(GetCurrentProcess(), static_cast<SIZE_T>(-1), static_cast<SIZE_T>(-1)); }
@@ -71,11 +72,15 @@ bool TrayApp::Initialize(HINSTANCE instance, bool startedAtSignIn) {
     AddTrayIcon();
     EnableDarkMenus();
     if (!popup_.Create(instance) || !toast_.Create(instance) || !generator_.Create(instance) ||
-        !historyWindow_.Create(instance, &history_)) {
+        !historyWindow_.Create(instance, &history_) || !camera_.Create(instance)) {
         return false;
     }
     popup_.onNext = [this] {
         if (!results_.empty()) ShowResult((shownResult_ + 1) % results_.size());
+    };
+    camera_.onFound = [this](std::vector<std::wstring> texts, RECT window) {
+        selectionOnScreen_ = window;
+        FinishRead(std::move(texts));
     };
     generator_.onCreated = [this](const std::wstring& payload) { Remember(HistoryEntry::Origin::Created, payload); };
     historyWindow_.onShowCode = [this](const std::wstring& text) { generator_.Show(GeneratorWindow::Mode::Text, text); };
@@ -94,7 +99,7 @@ bool TrayApp::Initialize(HINSTANCE instance, bool startedAtSignIn) {
 }
 
 bool TrayApp::PreTranslate(MSG& message) {
-    for (HWND window : {popup_.window(), generator_.window(), historyWindow_.window()}) {
+    for (HWND window : {popup_.window(), generator_.window(), historyWindow_.window(), camera_.window()}) {
         if (window && IsWindowVisible(window) && (message.hwnd == window || IsChild(window, message.hwnd))) {
             return IsDialogMessageW(window, &message) != FALSE;
         }
@@ -121,7 +126,9 @@ void TrayApp::ShowTrayMenu(POINT point) {
     HMENU menu = CreatePopupMenu();
     const std::wstring read = L"Read QR code\t" + ToString(settings_.readHotkey);
     const std::wstring fromClipboard = L"Create QR from clipboard\t" + ToString(settings_.createHotkey);
+    const std::wstring camera = L"Read QR with camera\t" + ToString(settings_.cameraHotkey);
     AppendMenuW(menu, MF_STRING, kMenuRead, read.c_str());
+    AppendMenuW(menu, MF_STRING, kMenuCamera, camera.c_str());
     AppendMenuW(menu, MF_STRING, kMenuCreateClipboard, fromClipboard.c_str());
     AppendMenuW(menu, MF_STRING, kMenuCreate, L"Create QR code…");
     AppendMenuW(menu, MF_STRING, kMenuHistory, L"History");
@@ -138,6 +145,7 @@ void TrayApp::ShowTrayMenu(POINT point) {
     DestroyMenu(menu);
     switch (command) {
         case kMenuRead: ReadCode(); break;
+        case kMenuCamera: ReadWithCamera(); break;
         case kMenuCreateClipboard: CreateFromClipboard(); break;
         case kMenuCreate: generator_.Show(GeneratorWindow::Mode::Text); break;
         case kMenuHistory: OpenHistory(); break;
@@ -162,7 +170,8 @@ void TrayApp::Notify(const std::wstring& message, BalloonAction action) {
 std::wstring TrayApp::RegisterHotkeys(const Settings& settings) {
     UnregisterHotkeys();
     std::wstring conflicts;
-    for (const auto& [id, hotkey] : {std::pair{kReadHotkeyId, settings.readHotkey}, std::pair{kCreateHotkeyId, settings.createHotkey}}) {
+    for (const auto& [id, hotkey] : {std::pair{kReadHotkeyId, settings.readHotkey}, std::pair{kCreateHotkeyId, settings.createHotkey},
+                                     std::pair{kCameraHotkeyId, settings.cameraHotkey}}) {
         if (!RegisterHotKey(window_, id, hotkey.modifiers | MOD_NOREPEAT, hotkey.key)) {
             conflicts += (conflicts.empty() ? L"" : L" ") + ToString(hotkey) + L" is already used by another app.";
         }
@@ -173,6 +182,7 @@ std::wstring TrayApp::RegisterHotkeys(const Settings& settings) {
 void TrayApp::UnregisterHotkeys() {
     UnregisterHotKey(window_, kReadHotkeyId);
     UnregisterHotKey(window_, kCreateHotkeyId);
+    UnregisterHotKey(window_, kCameraHotkeyId);
 }
 
 bool TrayApp::ApplySettings(const Settings& settings, bool autostart, std::wstring& error) {
@@ -223,6 +233,7 @@ void TrayApp::Exit() {
     toast_.Destroy();
     generator_.Destroy();
     historyWindow_.Destroy();
+    camera_.Destroy();
     UnregisterHotkeys();
     Shell_NotifyIconW(NIM_DELETE, &icon_);
     if (icon_.hIcon) DestroyIcon(icon_.hIcon);
@@ -262,6 +273,12 @@ void TrayApp::ReadCode() {
             captureActive_ = false;
             FinishRead(std::move(*texts));
         });
+}
+
+void TrayApp::ReadWithCamera() {
+    if (captureActive_ || exiting_) return;
+    popup_.Hide();
+    camera_.Show();
 }
 
 void TrayApp::FinishRead(std::vector<std::wstring> texts) {
@@ -387,6 +404,8 @@ LRESULT TrayApp::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam) {
         case WM_HOTKEY:
             if (wParam == kCreateHotkeyId) {
                 CreateFromClipboard();
+            } else if (wParam == kCameraHotkeyId) {
+                ReadWithCamera();
             } else {
                 ReadCode();
             }

@@ -46,6 +46,7 @@ target_include_directories(kodocore SYSTEM PRIVATE ${KODO_ZXING_SOURCE}/core/src
 target_link_libraries(kodocore PUBLIC user32 advapi32 shell32 ole32 shlwapi windowscodecs PRIVATE ZXing::ZXing)
 
 add_executable(Kodo WIN32
+    src/app/camera_window.cpp
     src/app/generator_window.cpp
     src/app/history_window.cpp
     src/app/main.cpp
@@ -58,7 +59,7 @@ add_executable(Kodo WIN32
     src/app/tray_app.cpp
     src/app/Kodo.rc
 )
-target_link_libraries(Kodo PRIVATE kodocore gdi32 comctl32 comdlg32 dwmapi uxtheme)
+target_link_libraries(Kodo PRIVATE kodocore gdi32 comctl32 comdlg32 dwmapi uxtheme mfplat mf mfreadwrite mfuuid)
 # The manifest is embedded through Kodo.rc.
 target_link_options(Kodo PRIVATE /MANIFEST:NO)
 

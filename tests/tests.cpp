@@ -513,6 +513,7 @@ TEST(SettingsPersist) {
     Settings settings = Settings::Load(kTestSettingsKey);
     CHECK(settings.readHotkey == (Hotkey{MOD_CONTROL | MOD_SHIFT, 'Q'}));
     CHECK(settings.createHotkey == (Hotkey{MOD_CONTROL | MOD_SHIFT, 'G'}));
+    CHECK(settings.cameraHotkey == (Hotkey{MOD_CONTROL | MOD_SHIFT | MOD_ALT, 'Q'}));
     CHECK(settings.keepHistory);
 
     settings.readHotkey = {MOD_CONTROL | MOD_ALT, 'R'};
@@ -537,6 +538,20 @@ TEST(InvalidStoredShortcutsFallBackToDefaults) {
     RegSetKeyValueW(HKEY_CURRENT_USER, kTestSettingsKey, L"ReadHotkey", REG_DWORD, &same, sizeof(same));
     const Settings loaded = Settings::Load(kTestSettingsKey);
     CHECK(!(loaded.readHotkey == loaded.createHotkey));
+    RegDeleteTreeW(HKEY_CURRENT_USER, kTestSettingsKey);
+}
+
+TEST(CameraShortcutPersistsAndMustBeUnique) {
+    RegDeleteTreeW(HKEY_CURRENT_USER, kTestSettingsKey);
+    Settings settings;
+    settings.cameraHotkey = {MOD_CONTROL | MOD_ALT, 'W'};
+    CHECK(settings.Save(kTestSettingsKey));
+    CHECK(Settings::Load(kTestSettingsKey).cameraHotkey == settings.cameraHotkey);
+    // The camera shortcut taken by Read falls back to the defaults.
+    settings.cameraHotkey = settings.readHotkey;
+    CHECK(settings.Save(kTestSettingsKey));
+    const Settings loaded = Settings::Load(kTestSettingsKey);
+    CHECK(!(loaded.cameraHotkey == loaded.readHotkey));
     RegDeleteTreeW(HKEY_CURRENT_USER, kTestSettingsKey);
 }
 

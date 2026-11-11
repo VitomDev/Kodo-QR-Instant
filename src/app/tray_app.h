@@ -1,5 +1,6 @@
 #pragma once
 
+#include "app/camera_window.h"
 #include "app/generator_window.h"
 #include "app/history_window.h"
 #include "app/result_popup.h"
@@ -49,6 +50,7 @@ private:
 
     void ReadCode();
     void FinishRead(std::vector<std::wstring> texts);
+    void ReadWithCamera();
     void ShowResult(size_t index);
     void CreateFromClipboard();
     void OpenHistory();
@@ -73,6 +75,7 @@ private:
     ResultPopup popup_;
     GeneratorWindow generator_;
     HistoryWindow historyWindow_;
+    CameraWindow camera_;
     Toast toast_;
     RECT selectionOnScreen_{};
     std::vector<std::wstring> results_;  // Codes of the last read, largest first

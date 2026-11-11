@@ -23,8 +23,12 @@ Settings Settings::Load(const wchar_t* keyPath) {
     DWORD value = 0;
     if (ReadDword(key, L"ReadHotkey", value) && Unpack(value).IsValid()) settings.readHotkey = Unpack(value);
     if (ReadDword(key, L"CreateHotkey", value) && Unpack(value).IsValid()) settings.createHotkey = Unpack(value);
+    if (ReadDword(key, L"CameraHotkey", value) && Unpack(value).IsValid()) settings.cameraHotkey = Unpack(value);
     // Two equal shortcuts could never both register; fall back to the defaults.
-    if (settings.readHotkey == settings.createHotkey) settings = Settings{};
+    if (settings.readHotkey == settings.createHotkey || settings.readHotkey == settings.cameraHotkey ||
+        settings.createHotkey == settings.cameraHotkey) {
+        settings = Settings{};
+    }
     if (ReadDword(key, L"KeepHistory", value)) settings.keepHistory = value != 0;
 
     RegCloseKey(key);
@@ -37,6 +41,7 @@ bool Settings::Save(const wchar_t* keyPath) const {
         return false;
     }
     const bool saved = WriteDword(key, L"ReadHotkey", Pack(readHotkey)) && WriteDword(key, L"CreateHotkey", Pack(createHotkey)) &&
+                       WriteDword(key, L"CameraHotkey", Pack(cameraHotkey)) &&
                        WriteDword(key, L"KeepHistory", keepHistory ? 1 : 0);
     RegCloseKey(key);
     return saved;
