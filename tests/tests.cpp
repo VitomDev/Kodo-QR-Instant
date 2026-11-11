@@ -346,6 +346,21 @@ TEST(ReadsPhoneSmsAndLocation) {
     CHECK(ParsePayload(L"Just some text").kind == PayloadKind::Text);
 }
 
+TEST(DoubtfulLinksAreFlagged) {
+    CHECK(LinkWarning(L"https://github.com/VitomDev").empty());
+    CHECK(LinkWarning(L"https://www.example.com:8443/path?q=1").empty());
+    CHECK(!LinkWarning(L"https://bit.ly/3abcd").empty());
+    CHECK(!LinkWarning(L"https://TinyURL.com/xyz").empty());
+    CHECK(!LinkWarning(L"http://example.com").empty());
+    CHECK(!LinkWarning(L"https://192.168.1.10/login").empty());
+    CHECK(!LinkWarning(L"https://xn--pple-43d.com").empty());
+    const std::wstring hidden = LinkWarning(L"https://paypal.com@evil.example/login");
+    CHECK(hidden.find(L"evil.example") != std::wstring::npos);
+    CHECK(LinkHost(L"https://user:pw@Example.COM:8080/x") == L"example.com");
+    // A domain that merely ends like a shortener is not one.
+    CHECK(LinkWarning(L"https://notbit.ly.example.com").empty());
+}
+
 TEST(PercentEncodingKeepsUnicode) {
     const std::wstring text = L"a b/\u00f1?\U0001F600";
     CHECK(PercentDecode(PercentEncode(text)) == text);
@@ -467,6 +482,32 @@ TEST(HistoryDoesNotRepeatTheNewestEntry) {
     CHECK(entries.size() == 1 && entries[0].time == 5);
     CHECK(!history.Add(HistoryEntry::Origin::Read, L"   ", 6));  // Blank text is not stored.
     history.Clear();
+}
+
+TEST(FavoritesStayOnTopAndSurviveClearing) {
+    History history(TemporaryFile(L"history-favorites.txt"));
+    history.Clear();
+    history.Add(HistoryEntry::Origin::Read, L"wifi", 1);
+    history.Add(HistoryEntry::Origin::Read, L"other", 2);
+    CHECK(history.Load()[1].text == L"wifi");
+    CHECK(history.SetFavorite(1, true));
+    auto entries = history.Load();
+    CHECK(entries[0].text == L"wifi" && entries[0].favorite && !entries[1].favorite);
+    // New codes go below the favorites; reading a favorite again keeps it in place.
+    history.Add(HistoryEntry::Origin::Read, L"newest", 3);
+    history.Add(HistoryEntry::Origin::Created, L"wifi", 4);
+    entries = history.Load();
+    CHECK(entries.size() == 3 && entries[0].text == L"wifi" && entries[0].time == 4 && entries[1].text == L"newest");
+    // The limit never drops a favorite.
+    for (int i = 0; i < static_cast<int>(History::kMaxEntries) + 5; ++i) history.Add(HistoryEntry::Origin::Read, std::to_wstring(i), 10 + i);
+    entries = history.Load();
+    CHECK(entries.size() == History::kMaxEntries + 1 && entries[0].text == L"wifi");
+    CHECK(history.ClearKeepingFavorites());
+    entries = history.Load();
+    CHECK(entries.size() == 1 && entries[0].text == L"wifi");
+    CHECK(history.SetFavorite(0, false));
+    CHECK(history.ClearKeepingFavorites());
+    CHECK(history.Load().empty());
 }
 
 TEST(HistoryIsLimited) {

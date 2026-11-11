@@ -20,6 +20,7 @@ struct Settings {
     Hotkey createHotkey{MOD_CONTROL | MOD_SHIFT, 'G'};
     Hotkey cameraHotkey{MOD_CONTROL | MOD_SHIFT | MOD_ALT, 'Q'};
     bool keepHistory = true;
+    bool readSound = true;  // Short beep when a code is read
     std::wstring camera;  // Device id of the chosen camera; empty for the default one
     bool cameraMirror = true;
 

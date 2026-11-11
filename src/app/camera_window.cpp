@@ -192,6 +192,7 @@ void CameraWindow::Paint() {
             StretchDIBits(buffer, mirror_ ? x + width - 1 : x, y, mirror_ ? -width : width, height, 0, 0, frame_.width,
                           frame_.height, frame_.pixels.data(), &info, DIB_RGB_COLORS, SRCCOPY);
         }
+        if (flash_) OutlineRounded(buffer, video_, RGB(16, 185, 129), Scale(8), Scale(5));
     }
 
     SelectObject(buffer, textFont_);
@@ -447,10 +448,22 @@ LRESULT CameraWindow::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam) 
                 texts = std::move(found_);
                 found_.clear();
             }
+            if (texts.empty()) return 0;
+            // A green frame for a moment confirms the read before the window closes.
+            pending_ = std::move(texts);
+            flash_ = true;
+            InvalidateRect(window_, &video_, FALSE);
+            SetTimer(window_, 1, 350, nullptr);
+            return 0;
+        }
+        case WM_TIMER: {
+            KillTimer(window_, wParam);
+            flash_ = false;
             RECT bounds;
             GetWindowRect(window_, &bounds);
             Hide();
-            if (!texts.empty() && onFound) onFound(std::move(texts), bounds);
+            if (onFound) onFound(std::move(pending_), bounds);
+            pending_.clear();
             return 0;
         }
         case WM_APP_STATUS: {

@@ -4,6 +4,7 @@
 
 #include <windows.h>
 
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 
@@ -60,18 +61,24 @@ std::vector<HistoryEntry> History::Load() const {
     std::vector<HistoryEntry> entries;
     std::ifstream file(path_, std::ios::binary);
     std::string line;
-    while (entries.size() < kMaxEntries && std::getline(file, line)) {
+    while (entries.size() < 4 * kMaxEntries && std::getline(file, line)) {
         if (!line.empty() && line.back() == '\r') line.pop_back();
         const std::wstring wide = FromUtf8(line);
         const size_t first = wide.find(L'\t');
         const size_t second = first == std::wstring::npos ? first : wide.find(L'\t', first + 1);
-        if (second == std::wstring::npos || first != 1 || (wide[0] != L'R' && wide[0] != L'C')) continue;
+        // "R" or "C", followed by "*" for a favorite.
+        if (second == std::wstring::npos || first < 1 || first > 2 || (wide[0] != L'R' && wide[0] != L'C') ||
+            (first == 2 && wide[1] != L'*')) {
+            continue;
+        }
         HistoryEntry entry;
+        entry.favorite = first == 2;
         entry.origin = wide[0] == L'R' ? HistoryEntry::Origin::Read : HistoryEntry::Origin::Created;
         entry.time = _wtoi64(wide.substr(first + 1, second - first - 1).c_str());
         entry.text = Unescape(std::wstring_view(wide).substr(second + 1));
         if (!entry.text.empty()) entries.push_back(std::move(entry));
     }
+    std::stable_partition(entries.begin(), entries.end(), [](const HistoryEntry& e) { return e.favorite; });
     return entries;
 }
 
@@ -85,7 +92,8 @@ bool History::Save(const std::vector<HistoryEntry>& entries) const {
         std::ofstream file(temporary, std::ios::binary | std::ios::trunc);
         for (const auto& entry : entries) {
             std::wostringstream line;
-            line << (entry.origin == HistoryEntry::Origin::Read ? L'R' : L'C') << L'\t' << entry.time << L'\t' << Escape(entry.text);
+            line << (entry.origin == HistoryEntry::Origin::Read ? L'R' : L'C') << (entry.favorite ? L"*" : L"") << L'\t'
+                 << entry.time << L'\t' << Escape(entry.text);
             file << ToUtf8(line.str()) << '\n';
         }
         if (!file.good()) return false;
@@ -96,11 +104,16 @@ bool History::Save(const std::vector<HistoryEntry>& entries) const {
 bool History::Add(HistoryEntry::Origin origin, const std::wstring& text, int64_t time) {
     if (!HasVisibleText(text)) return false;
     std::vector<HistoryEntry> entries = Load();
-    if (!entries.empty() && entries.front().text == text && entries.front().origin == origin) {
-        entries.front().time = time;
+    const auto firstRecent = std::find_if(entries.begin(), entries.end(), [](const HistoryEntry& e) { return !e.favorite; });
+    const auto favorite = std::find_if(entries.begin(), firstRecent, [&](const HistoryEntry& e) { return e.text == text; });
+    if (favorite != firstRecent) {
+        favorite->time = time;
+    } else if (firstRecent != entries.end() && firstRecent->text == text && firstRecent->origin == origin) {
+        firstRecent->time = time;
     } else {
-        entries.insert(entries.begin(), HistoryEntry{origin, time, text});
-        if (entries.size() > kMaxEntries) entries.resize(kMaxEntries);
+        const size_t favorites = static_cast<size_t>(firstRecent - entries.begin());
+        entries.insert(entries.begin() + static_cast<std::ptrdiff_t>(favorites), HistoryEntry{origin, time, text});
+        if (entries.size() > favorites + kMaxEntries) entries.resize(favorites + kMaxEntries);
     }
     return Save(entries);
 }
@@ -109,6 +122,20 @@ bool History::Remove(size_t index) {
     std::vector<HistoryEntry> entries = Load();
     if (index >= entries.size()) return false;
     entries.erase(entries.begin() + static_cast<std::ptrdiff_t>(index));
+    return entries.empty() ? Clear() : Save(entries);
+}
+
+bool History::SetFavorite(size_t index, bool favorite) {
+    std::vector<HistoryEntry> entries = Load();
+    if (index >= entries.size()) return false;
+    entries[index].favorite = favorite;
+    std::stable_partition(entries.begin(), entries.end(), [](const HistoryEntry& e) { return e.favorite; });
+    return Save(entries);
+}
+
+bool History::ClearKeepingFavorites() {
+    std::vector<HistoryEntry> entries = Load();
+    std::erase_if(entries, [](const HistoryEntry& e) { return !e.favorite; });
     return entries.empty() ? Clear() : Save(entries);
 }
 

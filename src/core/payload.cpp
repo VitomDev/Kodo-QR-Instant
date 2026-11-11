@@ -162,6 +162,58 @@ bool IsWebLink(std::wstring_view text) {
     return true;
 }
 
+namespace {
+
+// The part between "://" and the path: may hold "user@" and ":port".
+std::wstring Authority(std::wstring_view link) {
+    const std::wstring trimmed = Trim(link);
+    const size_t scheme = trimmed.find(L"://");
+    if (scheme == std::wstring::npos) return {};
+    const size_t start = scheme + 3;
+    const size_t end = trimmed.find_first_of(L"/?#", start);
+    return trimmed.substr(start, end == std::wstring::npos ? std::wstring::npos : end - start);
+}
+
+bool IsIpAddress(const std::wstring& host) {
+    if (!host.empty() && host.front() == L'[') return true;  // IPv6
+    if (host.empty()) return false;
+    for (wchar_t c : host) {
+        if (!std::iswdigit(c) && c != L'.') return false;
+    }
+    return true;
+}
+
+}  // namespace
+
+std::wstring LinkHost(std::wstring_view link) {
+    std::wstring host = Authority(link);
+    if (const size_t at = host.rfind(L'@'); at != std::wstring::npos) host = host.substr(at + 1);
+    if (!host.empty() && host.front() != L'[') {
+        if (const size_t colon = host.find(L':'); colon != std::wstring::npos) host = host.substr(0, colon);
+    }
+    for (auto& c : host) c = static_cast<wchar_t>(std::towlower(c));
+    return host;
+}
+
+std::wstring LinkWarning(std::wstring_view link) {
+    static constexpr const wchar_t* kShorteners[] = {L"bit.ly", L"tinyurl.com", L"t.co", L"goo.gl", L"ow.ly", L"is.gd",
+                                                     L"buff.ly", L"rebrand.ly", L"cutt.ly", L"shorturl.at", L"rb.gy",
+                                                     L"tiny.cc", L"t.ly", L"s.id", L"v.gd", L"qrco.de", L"bl.ink"};
+    const std::wstring host = LinkHost(link);
+    if (Authority(link).find(L'@') != std::wstring::npos) {
+        return L"The address hides its real destination after an @: it goes to " + host + L".";
+    }
+    if (host.find(L"xn--") != std::wstring::npos) return L"The address uses look-alike letters that can imitate another site.";
+    if (IsIpAddress(host)) return L"The link goes to a bare IP address instead of a website name.";
+    for (const wchar_t* shortener : kShorteners) {
+        if (host == shortener || (host.size() > wcslen(shortener) && host.ends_with(std::wstring(L".") + shortener))) {
+            return L"This is a short link: you can't see where it really goes until you open it.";
+        }
+    }
+    if (StartsWithNoCase(Trim(link), L"http://")) return L"The connection is not encrypted (http, not https).";
+    return {};
+}
+
 Payload ParsePayload(std::wstring_view raw) {
     Payload payload;
     payload.raw = std::wstring(raw);

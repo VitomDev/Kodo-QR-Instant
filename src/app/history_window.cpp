@@ -22,6 +22,7 @@ enum ControlId {
     kCopyButton,
     kDeleteButton,
     kClearButton,
+    kFavoriteButton,
 };
 
 constexpr UINT_PTR kCopiedTimer = 1;
@@ -73,7 +74,7 @@ bool HistoryWindow::Create(HINSTANCE instance, History* history) {
     LVCOLUMNW column{LVCF_WIDTH};
     column.cx = 100;
     ListView_InsertColumn(list_, 0, &column);
-    for (int id : {kShowButton, kCopyButton, kDeleteButton, kClearButton}) {
+    for (int id : {kShowButton, kCopyButton, kFavoriteButton, kDeleteButton, kClearButton}) {
         HWND button = CreateWindowExW(0, L"BUTTON", L"", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_OWNERDRAW, 0, 0, 0, 0, window_,
                                       reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)), instance, nullptr);
         EnableHover(button);
@@ -141,9 +142,11 @@ void HistoryWindow::Layout() {
     const int show = ButtonWidth(window_, fonts, icons::kQrCode, L"Show QR code", dpi);
     const int copy = ButtonWidth(window_, fonts, icons::kCopy, L"Copy text", dpi);
     const int remove = ButtonWidth(window_, fonts, icons::kDelete, L"Delete", dpi);
+    const int favorite = ButtonWidth(window_, fonts, icons::kStar, L"Favorite", dpi);
     const int clear = ButtonWidth(window_, fonts, nullptr, L"Clear history", dpi);
     place(kShowButton, padding, show);
     place(kCopyButton, padding + show + Scale(8), copy);
+    place(kFavoriteButton, padding + show + copy + Scale(16), favorite);
     place(kClearButton, width - padding - clear, clear);
     place(kDeleteButton, width - padding - clear - Scale(8) - remove, remove);
     y += Scale(kButtonHeight) + padding;
@@ -184,6 +187,13 @@ void HistoryWindow::Draw(const DRAWITEMSTRUCT& item) {
         case kDeleteButton:
             DrawButton(item, theme_, fonts, ButtonStyle::Standard, icons::kDelete, L"Delete", radius);
             break;
+        case kFavoriteButton: {
+            const int index = Selected();
+            const bool favorite = index >= 0 && index < static_cast<int>(entries_.size()) && entries_[index].favorite;
+            DrawButton(item, theme_, fonts, ButtonStyle::Standard, favorite ? icons::kStarFilled : icons::kStar, L"Favorite", radius,
+                       favorite ? theme_.accent : CLR_INVALID);
+            break;
+        }
         case kClearButton:
             DrawButton(item, theme_, fonts, ButtonStyle::Subtle, nullptr, L"Clear history", radius);
             break;
@@ -229,7 +239,15 @@ void HistoryWindow::DrawRow(HDC dc, int index) {
     SelectObject(dc, textFont_);
     SetTextColor(dc, theme_.text);
     const std::wstring summary = OneLinePreview(Summary(entry), 200);
-    RECT top{textLeft, card.top + Scale(4), card.right - Scale(12), middle + Scale(2)};
+    if (entry.favorite) {
+        HGDIOBJ font = SelectObject(dc, iconFont_);
+        SetTextColor(dc, theme_.accent);
+        RECT star{card.right - Scale(36), card.top, card.right - Scale(12), card.bottom};
+        DrawTextW(dc, icons::kStarFilled, -1, &star, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        SelectObject(dc, font);
+        SetTextColor(dc, theme_.text);
+    }
+    RECT top{textLeft, card.top + Scale(4), card.right - Scale(entry.favorite ? 44 : 12), middle + Scale(2)};
     DrawTextW(dc, summary.c_str(), -1, &top, DT_LEFT | DT_BOTTOM | DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX);
     SelectObject(dc, smallFont_);
     SetTextColor(dc, theme_.secondaryText);
@@ -244,7 +262,8 @@ int HistoryWindow::Selected() const { return list_ ? ListView_GetNextItem(list_,
 
 void HistoryWindow::UpdateButtons() {
     const bool selected = Selected() >= 0;
-    for (int id : {kShowButton, kCopyButton, kDeleteButton}) EnableWindow(GetDlgItem(window_, id), selected);
+    for (int id : {kShowButton, kCopyButton, kFavoriteButton, kDeleteButton}) EnableWindow(GetDlgItem(window_, id), selected);
+    InvalidateRect(GetDlgItem(window_, kFavoriteButton), nullptr, FALSE);
     EnableWindow(GetDlgItem(window_, kClearButton), !entries_.empty());
 }
 
@@ -337,9 +356,27 @@ LRESULT HistoryWindow::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam)
                         Refresh();
                     }
                     return 0;
+                case kFavoriteButton:
+                    if (index >= 0) {
+                        const bool favorite = !entries_[index].favorite;
+                        history_->SetFavorite(static_cast<size_t>(index), favorite);
+                        const std::wstring text = entries_[index].text;
+                        Refresh();
+                        // Keep the same code selected wherever it moved.
+                        for (size_t i = 0; i < entries_.size(); ++i) {
+                            if (entries_[i].text == text) {
+                                ListView_SetItemState(list_, -1, 0, LVIS_SELECTED | LVIS_FOCUSED);
+                                ListView_SetItemState(list_, static_cast<int>(i), LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
+                                ListView_EnsureVisible(list_, static_cast<int>(i), FALSE);
+                                break;
+                            }
+                        }
+                    }
+                    return 0;
                 case kClearButton:
-                    if (MessageBoxW(window_, L"Delete every code in the history?", L"Kodo QR Instant", MB_YESNO | MB_ICONQUESTION) == IDYES) {
-                        history_->Clear();
+                    if (MessageBoxW(window_, L"Delete every code in the history? Favorites are kept.", L"Kodo QR Instant",
+                                    MB_YESNO | MB_ICONQUESTION) == IDYES) {
+                        history_->ClearKeepingFavorites();
                         Refresh();
                     }
                     return 0;

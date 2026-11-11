@@ -59,7 +59,7 @@ add_executable(Kodo WIN32
     src/app/tray_app.cpp
     src/app/Kodo.rc
 )
-target_link_libraries(Kodo PRIVATE kodocore gdi32 comctl32 comdlg32 dwmapi uxtheme mfplat mf mfreadwrite mfuuid)
+target_link_libraries(Kodo PRIVATE kodocore gdi32 comctl32 comdlg32 dwmapi uxtheme winmm mfplat mf mfreadwrite mfuuid)
 # The manifest is embedded through Kodo.rc.
 target_link_options(Kodo PRIVATE /MANIFEST:NO)
 

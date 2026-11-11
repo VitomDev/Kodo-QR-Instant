@@ -15,7 +15,7 @@ Kodo lives in the notification area, uses almost no memory and works **offline**
 ## 🚀 Features
 
 - 🔍 **Read a QR code** (`Ctrl + Shift + Q`): select an area of the screen and a small card shows what the code holds
-  - 🔗 **Links**: open them in your browser or copy them
+  - 🔗 **Links**: open them in your browser or copy them. Short links (bit.ly…), look-alike addresses, bare IPs and unencrypted links get a warning and ask before opening
   - 📶 **Wi-Fi**: see the network name and password, copy either one
   - 📋 **Text**: copied straight to your clipboard
   - 📧 Emails, 📞 phone numbers, 💬 text messages, 👤 contacts (vCard / MeCard) and 📍 locations too
@@ -24,7 +24,8 @@ Kodo lives in the notification area, uses almost no memory and works **offline**
 - ✨ **Create a QR code from the clipboard** (`Ctrl + Shift + G`): copy any text or link, press the shortcut and the code is there
   - 🖼️ **Copy image** to paste it into a chat or a document, or 💾 **Save PNG**
 - 🧩 **Templates**: create codes for a 📶 **Wi-Fi network**, a 👤 **contact** (vCard) or an 📧 **email**, with a live preview
-- 🕘 **History**: the codes you read and create, to show them again or copy their text. Stays on your PC, and you can turn it off
+- 🕘 **History**: the codes you read and create, to show them again or copy their text. Mark the ones you reuse (your Wi-Fi, your contact card) as ⭐ **favorites** to keep them on top. Stays on your PC, and you can turn it off
+- 🔊 A short beep (and a green flash on the camera) tells you a code was read. You can turn the sound off
 - 🖱️ Left-click the tray icon to read a code; right-click for the menu
 - 🔒 100% offline: screenshots, camera images and codes never leave your PC. No telemetry, no accounts
 - 🌍 Accents, emoji and any alphabet (日本語, Русский…) both when reading and creating
@@ -70,7 +71,8 @@ After reading, the card closes with `Esc`, the ✕ button or by clicking elsewhe
 ### ⚙️ Settings
 
 - **Shortcuts** for reading and creating
-- **History**: keep it or not, and clear it
+- **History**: keep it or not, and clear it (favorites are kept)
+- **Sound when a code is read**
 - **Start with Windows**
 
 ---

@@ -79,6 +79,11 @@ void ResultPopup::Destroy() {
     textFont_ = titleFont_ = smallFont_ = buttonFont_ = iconFont_ = titleIconFont_ = nullptr;
 }
 
+std::wstring ResultPopup::NoteText() const {
+    if (position_.empty()) return content_.note;
+    return position_ + (content_.note.empty() ? L"" : L"  ·  " + content_.note);
+}
+
 int ResultPopup::Scale(int value) const { return MulDiv(value, GetDpiForWindow(window_), 96); }
 
 // Picks up the current theme and the DPI of the monitor the popup is on.
@@ -136,7 +141,9 @@ void ResultPopup::Layout() {
     if (!content_.note.empty() || several) {
         y += Scale(6);
         noteY_ = y;
-        y += Scale(20);
+        // Warnings can take two lines.
+        noteHeight_ = std::max(Scale(20), MeasureHeight(window_, smallFont_, NoteText(), inner));
+        y += noteHeight_;
     }
     y += gap + Scale(4);
 
@@ -192,16 +199,15 @@ void ResultPopup::Paint() {
     DrawTextW(dc, content_.icon ? content_.icon : icons::kQrCode, -1, &icon, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
     SelectObject(dc, titleFont_);
     SetTextColor(dc, theme_.text);
-    RECT title{icon.right + Scale(8), padding, client.right / 2 + Scale(40), padding + header};
+    RECT title{icon.right + Scale(8), padding, client.right - padding - header, padding + header};
     DrawTextW(dc, content_.title.c_str(), -1, &title, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX);
 
     if (noteY_) {
         SelectObject(dc, smallFont_);
         SetTextColor(dc, theme_.secondaryText);
-        std::wstring note = content_.note;
-        if (!position_.empty()) note = position_ + (note.empty() ? L"" : L"  ·  " + note);
-        RECT rect{padding, noteY_, client.right - padding, noteY_ + Scale(20)};
-        DrawTextW(dc, note.c_str(), -1, &rect, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX);
+        const std::wstring note = NoteText();
+        RECT rect{padding, noteY_, client.right - padding, noteY_ + noteHeight_};
+        DrawTextW(dc, note.c_str(), -1, &rect, DT_LEFT | DT_WORDBREAK | DT_NOPREFIX);
     }
 
     // A hairline border for Windows 10, where DWM draws none.

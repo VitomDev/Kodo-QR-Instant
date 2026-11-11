@@ -54,6 +54,7 @@ private:
     void Paint();
     void Draw(const DRAWITEMSTRUCT& item);
     void Run(size_t index);
+    std::wstring NoteText() const;
     int Scale(int value) const;
 
     HINSTANCE instance_ = nullptr;
@@ -72,6 +73,7 @@ private:
     RECT anchor_{};
     int copiedIndex_ = -1;
     int noteY_ = 0;
+    int noteHeight_ = 0;
 };
 
 }  // namespace kodo

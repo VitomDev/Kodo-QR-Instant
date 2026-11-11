@@ -47,6 +47,12 @@ Payload ParsePayload(std::wstring_view raw);
 // could start arbitrary programs or files.
 bool IsWebLink(std::wstring_view text);
 
+// The host name of a web link ("bit.ly"), without user info or port.
+std::wstring LinkHost(std::wstring_view link);
+// Why a link deserves a second look before opening it (short links hide
+// their destination, look-alike letters, bare IP addresses...), or empty.
+std::wstring LinkWarning(std::wstring_view link);
+
 // Builders for the Create QR templates.
 std::wstring BuildWifi(const WifiNetwork& network);
 std::wstring BuildEmail(const EmailMessage& message);

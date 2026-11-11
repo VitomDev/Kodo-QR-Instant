@@ -22,6 +22,7 @@ enum ControlId {
     kHistoryToggle,
     kClearHistory,
     kAutostartToggle,
+    kSoundToggle,
     kCancel = IDCANCEL,
     kSave = IDOK,
 };
@@ -131,6 +132,8 @@ void Layout(State& state) {
 
     text(padding, y, width - 2 * padding, scale(24), L"General", TextStyle::Caption);
     y += scale(24);
+    labelRow(y, L"Sound when a code is read", kSoundToggle, scale(44), scale(20));
+    y += row;
     labelRow(y, L"Start with Windows", kAutostartToggle, scale(44), scale(20));
     y += row + scale(12);
 
@@ -242,6 +245,8 @@ void DrawControl(State& state, const DRAWITEMSTRUCT& item) {
         DrawToggle(state, item, state.settings.keepHistory);
     } else if (id == kAutostartToggle) {
         DrawToggle(state, item, state.autostart);
+    } else if (id == kSoundToggle) {
+        DrawToggle(state, item, state.settings.readSound);
     } else if (id == kClearHistory) {
         DrawButton(item, theme, fonts, ButtonStyle::Subtle, nullptr, L"Clear history", radius);
     } else if (id == kSave) {
@@ -345,13 +350,16 @@ LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lPa
                 state->settings.keepHistory = !state->settings.keepHistory;
                 InvalidateRect(GetDlgItem(window, id), nullptr, FALSE);
             } else if (id == kClearHistory) {
-                if (MessageBoxW(window, L"Delete every code in the history?", L"Kodo QR Instant", MB_YESNO | MB_ICONQUESTION) == IDYES) {
+                if (MessageBoxW(window, L"Delete every code in the history? Favorites are kept.", L"Kodo QR Instant", MB_YESNO | MB_ICONQUESTION) == IDYES) {
                     if (state->clearHistory) state->clearHistory();
                     state->historyCleared = true;
                     Layout(*state);
                 }
             } else if (id == kAutostartToggle) {
                 state->autostart = !state->autostart;
+                InvalidateRect(GetDlgItem(window, id), nullptr, FALSE);
+            } else if (id == kSoundToggle) {
+                state->settings.readSound = !state->settings.readSound;
                 InvalidateRect(GetDlgItem(window, id), nullptr, FALSE);
             }
             return 0;
@@ -430,6 +438,7 @@ void ShowSettingsDialog(HINSTANCE instance, HWND owner, const Settings& current,
     SetWindowSubclass(add(kCreateShortcut), ShortcutProc, 0, reinterpret_cast<DWORD_PTR>(&state));
     add(kHistoryToggle);
     add(kClearHistory);
+    add(kSoundToggle);
     add(kAutostartToggle);
     add(kCancel);
     add(kSave);

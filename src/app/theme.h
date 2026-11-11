@@ -71,6 +71,9 @@ inline constexpr wchar_t kPhone[] = L"";
 inline constexpr wchar_t kMessage[] = L"";
 inline constexpr wchar_t kContact[] = L"";
 inline constexpr wchar_t kLocation[] = L"";
+inline constexpr wchar_t kWarning[] = L"\uE7BA";
+inline constexpr wchar_t kStar[] = L"\uE734";
+inline constexpr wchar_t kStarFilled[] = L"\uE735";
 inline constexpr wchar_t kText[] = L"";
 }  // namespace icons
 

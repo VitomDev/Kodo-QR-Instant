@@ -76,6 +76,8 @@ private:
     std::mutex frameLock_;
     BgraImage frame_;  // Latest camera frame, guarded by frameLock_
     std::vector<std::wstring> found_;
+    std::vector<std::wstring> pending_;  // Found codes, handed over once the flash ends
+    bool flash_ = false;
 };
 
 }  // namespace kodo

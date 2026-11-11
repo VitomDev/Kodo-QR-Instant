@@ -43,6 +43,7 @@ Settings Settings::Load(const wchar_t* keyPath) {
     }
     if (ReadDword(key, L"KeepHistory", value)) settings.keepHistory = value != 0;
     if (ReadDword(key, L"CameraMirror", value)) settings.cameraMirror = value != 0;
+    if (ReadDword(key, L"ReadSound", value)) settings.readSound = value != 0;
     settings.camera = ReadString(key, L"Camera");
 
     RegCloseKey(key);
@@ -57,7 +58,8 @@ bool Settings::Save(const wchar_t* keyPath) const {
     const bool saved = WriteDword(key, L"ReadHotkey", Pack(readHotkey)) && WriteDword(key, L"CreateHotkey", Pack(createHotkey)) &&
                        WriteDword(key, L"CameraHotkey", Pack(cameraHotkey)) &&
                        WriteDword(key, L"KeepHistory", keepHistory ? 1 : 0) &&
-                       WriteDword(key, L"CameraMirror", cameraMirror ? 1 : 0) && WriteString(key, L"Camera", camera);
+                       WriteDword(key, L"CameraMirror", cameraMirror ? 1 : 0) &&
+                       WriteDword(key, L"ReadSound", readSound ? 1 : 0) && WriteString(key, L"Camera", camera);
     RegCloseKey(key);
     return saved;
 }

@@ -13,7 +13,10 @@
 #include "core/text.h"
 
 #include <commctrl.h>
+#include <mmsystem.h>
 #include <windowsx.h>
+
+#include <cmath>
 
 namespace kodo {
 
@@ -44,6 +47,36 @@ const wchar_t* KindIcon(PayloadKind kind) {
         case PayloadKind::Text: break;
     }
     return icons::kText;
+}
+
+// A short soft beep, generated once as a WAV in memory.
+void PlayReadSound() {
+    static const std::vector<uint8_t> wav = [] {
+        constexpr uint32_t rate = 22050, samples = rate * 90 / 1000;
+        std::vector<uint8_t> data(44 + samples * 2);
+        const auto put32 = [&](size_t at, uint32_t v) { for (int i = 0; i < 4; ++i) data[at + i] = static_cast<uint8_t>(v >> (8 * i)); };
+        const auto put16 = [&](size_t at, uint16_t v) { data[at] = static_cast<uint8_t>(v); data[at + 1] = static_cast<uint8_t>(v >> 8); };
+        std::memcpy(&data[0], "RIFF", 4);
+        put32(4, static_cast<uint32_t>(data.size() - 8));
+        std::memcpy(&data[8], "WAVEfmt ", 8);
+        put32(16, 16);
+        put16(20, 1);
+        put16(22, 1);
+        put32(24, rate);
+        put32(28, rate * 2);
+        put16(32, 2);
+        put16(34, 16);
+        std::memcpy(&data[36], "data", 4);
+        put32(40, samples * 2);
+        for (uint32_t i = 0; i < samples; ++i) {
+            // 1.5 kHz with a quick fade so it does not click.
+            const double fade = std::min(1.0, std::min(i, samples - i) / (rate * 0.01));
+            const double value = std::sin(2 * 3.14159265358979 * 1500 * i / rate) * 0.25 * fade;
+            put16(44 + i * 2, static_cast<uint16_t>(static_cast<int16_t>(value * 32767)));
+        }
+        return data;
+    }();
+    PlaySoundW(reinterpret_cast<LPCWSTR>(wav.data()), nullptr, SND_MEMORY | SND_ASYNC | SND_NODEFAULT);
 }
 
 bool OpenWithShell(const std::wstring& target) {
@@ -219,7 +252,7 @@ void TrayApp::OpenSettings() {
         instance_, window_, settings_,
         [this](const Settings& settings, bool autostart, std::wstring& error) { return ApplySettings(settings, autostart, error); },
         [this] {
-            history_.Clear();
+            history_.ClearKeepingFavorites();
             if (historyWindow_.IsVisible()) historyWindow_.Refresh();
         });
     if (!exiting_) RegisterHotkeys(settings_);
@@ -292,6 +325,7 @@ void TrayApp::FinishRead(std::vector<std::wstring> texts) {
         toast_.Show(selectionOnScreen_, L"No QR code found", Toast::Kind::Info);
         return;
     }
+    if (settings_.readSound) PlayReadSound();
     for (auto it = texts.rbegin(); it != texts.rend(); ++it) Remember(HistoryEntry::Origin::Read, *it);
     results_ = std::move(texts);
     ShowResult(0);
@@ -316,8 +350,23 @@ void TrayApp::ShowResult(size_t index) {
     switch (payload.kind) {
         case PayloadKind::Link: {
             const std::wstring link = Trim(text);
-            content.actions.push_back(action(icons::kOpen, L"Open link", [link] { return OpenWithShell(link); }, true, false));
+            const std::wstring warning = LinkWarning(link);
+            if (warning.empty()) {
+                content.actions.push_back(action(icons::kOpen, L"Open link", [link] { return OpenWithShell(link); }, true, false));
+                content.actions.push_back(action(icons::kCopy, L"Copy link", copy(link), false, true));
+                break;
+            }
+            // A doubtful link: copying is the main action and opening asks first.
+            content.icon = icons::kWarning;
+            content.title = L"Link \u2013 check before opening";
+            content.note = warning;
+            const std::wstring host = LinkHost(link);
             content.actions.push_back(action(icons::kCopy, L"Copy link", copy(link), false, true));
+            content.actions.push_back(action(icons::kOpen, L"Open anyway", [owner, link, host, warning] {
+                const std::wstring question = L"Open this link?\n\n" + host + L"\n\n" + warning;
+                if (MessageBoxW(owner, question.c_str(), L"Kodo QR Instant", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) != IDYES) return false;
+                return OpenWithShell(link);
+            }, true, false));
             break;
         }
         case PayloadKind::Wifi:
