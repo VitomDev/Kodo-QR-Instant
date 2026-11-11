@@ -20,7 +20,7 @@ Kodo lives in the notification area, uses almost no memory and works **offline**
   - 📋 **Text**: copied straight to your clipboard
   - 📧 Emails, 📞 phone numbers, 💬 text messages, 👤 contacts (vCard / MeCard) and 📍 locations too
   - Several codes in the selection? Go through them with **Next code**
-- 📷 **Read with the camera** (`Ctrl + Shift + Alt + Q`): a window opens your default camera; hold up a QR code (on your phone, a ticket, a poster…) and it's read the moment it's in view
+- 📷 **Read with the camera** (`Ctrl + Shift + Alt + Q`): a window opens your default camera; hold up a QR code (on your phone, a ticket, a poster…) and it's read the moment it's in view. Pick another camera if you have several, and turn the mirror view on or off
 - ✨ **Create a QR code from the clipboard** (`Ctrl + Shift + G`): copy any text or link, press the shortcut and the code is there
   - 🖼️ **Copy image** to paste it into a chat or a document, or 💾 **Save PNG**
 - 🧩 **Templates**: create codes for a 📶 **Wi-Fi network**, a 👤 **contact** (vCard) or an 📧 **email**, with a live preview

@@ -14,12 +14,17 @@
 
 namespace kodo {
 
-// Read with camera: a window showing the default camera that closes as soon
+// Read with camera: a window showing the chosen camera that closes as soon
 // as a QR code is in view, handing its contents to `onFound`.
 class CameraWindow {
 public:
     // The codes found (largest first) and where the window was, to place the result next to it.
     std::function<void(std::vector<std::wstring> texts, RECT window)> onFound;
+    // The user picked another camera or flipped the mirror; worth saving.
+    std::function<void(const std::wstring& camera, bool mirror)> onOptionsChanged;
+
+    // `camera` is a device id from a previous session; empty or missing means the default camera.
+    void SetOptions(const std::wstring& camera, bool mirror);
 
     bool Create(HINSTANCE instance);
     void Destroy();
@@ -36,6 +41,8 @@ private:
     void Layout();
     void Paint();
     void Draw(const DRAWITEMSTRUCT& item);
+    void ShowCameraMenu();
+    std::wstring CameraName() const;
     void Start();
     void Stop();
     void Capture();
@@ -55,6 +62,14 @@ private:
     std::wstring status_;
     bool statusIsError_ = false;
     bool laidOut_ = false;
+
+    struct Device {
+        std::wstring name;
+        std::wstring id;  // Symbolic link, stable across sessions
+    };
+    std::vector<Device> devices_;
+    std::wstring camera_;
+    bool mirror_ = true;
 
     std::thread worker_;
     std::atomic<bool> stop_{false};

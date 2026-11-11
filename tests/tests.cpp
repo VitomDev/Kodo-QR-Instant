@@ -541,6 +541,19 @@ TEST(InvalidStoredShortcutsFallBackToDefaults) {
     RegDeleteTreeW(HKEY_CURRENT_USER, kTestSettingsKey);
 }
 
+TEST(CameraChoicePersists) {
+    RegDeleteTreeW(HKEY_CURRENT_USER, kTestSettingsKey);
+    CHECK(Settings::Load(kTestSettingsKey).camera.empty());
+    CHECK(Settings::Load(kTestSettingsKey).cameraMirror);
+    Settings settings;
+    settings.camera = L"\\\\?\\usb#vid_046d&pid_082d#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global";
+    settings.cameraMirror = false;
+    CHECK(settings.Save(kTestSettingsKey));
+    const Settings loaded = Settings::Load(kTestSettingsKey);
+    CHECK(loaded.camera == settings.camera && !loaded.cameraMirror);
+    RegDeleteTreeW(HKEY_CURRENT_USER, kTestSettingsKey);
+}
+
 TEST(CameraShortcutPersistsAndMustBeUnique) {
     RegDeleteTreeW(HKEY_CURRENT_USER, kTestSettingsKey);
     Settings settings;

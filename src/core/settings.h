@@ -20,6 +20,8 @@ struct Settings {
     Hotkey createHotkey{MOD_CONTROL | MOD_SHIFT, 'G'};
     Hotkey cameraHotkey{MOD_CONTROL | MOD_SHIFT | MOD_ALT, 'Q'};
     bool keepHistory = true;
+    std::wstring camera;  // Device id of the chosen camera; empty for the default one
+    bool cameraMirror = true;
 
     // `keyPath` is relative to HKEY_CURRENT_USER; tests use a scratch key.
     static Settings Load(const wchar_t* keyPath = kSettingsKey);

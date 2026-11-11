@@ -78,6 +78,12 @@ bool TrayApp::Initialize(HINSTANCE instance, bool startedAtSignIn) {
     popup_.onNext = [this] {
         if (!results_.empty()) ShowResult((shownResult_ + 1) % results_.size());
     };
+    camera_.SetOptions(settings_.camera, settings_.cameraMirror);
+    camera_.onOptionsChanged = [this](const std::wstring& camera, bool mirror) {
+        settings_.camera = camera;
+        settings_.cameraMirror = mirror;
+        settings_.Save();
+    };
     camera_.onFound = [this](std::vector<std::wstring> texts, RECT window) {
         selectionOnScreen_ = window;
         FinishRead(std::move(texts));
