@@ -24,7 +24,7 @@ Kodo lives in the notification area, uses almost no memory and works **offline**
 - ✨ **Create a QR code from the clipboard** (`Ctrl + Shift + G`): copy any text or link, press the shortcut and the code is there
   - 🖼️ **Copy image** to paste it into a chat or a document, or 💾 **Save PNG**
 - 🧩 **Templates**: create codes for a 📶 **Wi-Fi network**, a 👤 **contact** (vCard) or an 📧 **email**, with a live preview
-- 🕘 **History**: the codes you read and create, to show them again or copy their text. Mark the ones you reuse (your Wi-Fi, your contact card) as ⭐ **favorites** to keep them on top. Stays on your PC, and you can turn it off
+- 🕘 **History**: the codes you read and create, to show them again or copy their text. Mark the ones you reuse (your Wi-Fi, your contact card) as ⭐ **favorites** to keep them on top. Scanning a favorite link opens it right away. Stays on your PC, and you can turn it off
 - ✨ A light sweeps over the code you selected, with a glow and a few sparks, and a soft glass sound plays (a green flash on the camera). You can turn the sound off
 - 🖱️ Left-click the tray icon to read a code; right-click for the menu
 - 🔒 100% offline: screenshots, camera images and codes never leave your PC. No telemetry, no accounts

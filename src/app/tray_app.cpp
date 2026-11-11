@@ -295,13 +295,30 @@ void TrayApp::ReadWithCamera() {
     camera_.Show();
 }
 
+bool TrayApp::IsFavorite(const std::wstring& text) const {
+    if (!settings_.keepHistory) return false;
+    for (const auto& entry : history_.Load()) {
+        if (!entry.favorite) break;  // Favorites come first.
+        if (Trim(entry.text) == Trim(text)) return true;
+    }
+    return false;
+}
+
 void TrayApp::FinishRead(std::vector<std::wstring> texts) {
     if (texts.empty()) {
         toast_.Show(selectionOnScreen_, L"No QR code found", Toast::Kind::Info);
         return;
     }
     if (settings_.readSound) PlayReadSound(instance_);
+    // A favorite link is trusted: open it straight away instead of asking.
+    const std::wstring first = texts.front();
+    const bool favoriteLink = texts.size() == 1 && ParsePayload(first).kind == PayloadKind::Link && IsFavorite(first);
     for (auto it = texts.rbegin(); it != texts.rend(); ++it) Remember(HistoryEntry::Origin::Read, *it);
+    if (favoriteLink && OpenWithShell(Trim(first))) {
+        popup_.Hide();
+        toast_.Show(selectionOnScreen_, L"Opening favorite: " + LinkHost(first), Toast::Kind::Success);
+        return;
+    }
     results_ = std::move(texts);
     ShowResult(0);
 }

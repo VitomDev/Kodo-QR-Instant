@@ -52,6 +52,7 @@ private:
     void ReadCode();
     void FinishRead(std::vector<std::wstring> texts);
     void ReadWithCamera();
+    bool IsFavorite(const std::wstring& text) const;
     void ShowResult(size_t index);
     void CreateFromClipboard();
     void OpenHistory();
