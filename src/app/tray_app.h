@@ -4,6 +4,7 @@
 #include "app/generator_window.h"
 #include "app/history_window.h"
 #include "app/result_popup.h"
+#include "app/scan_effect.h"
 #include "app/toast.h"
 #include "core/history.h"
 #include "core/settings.h"
@@ -76,6 +77,7 @@ private:
     GeneratorWindow generator_;
     HistoryWindow historyWindow_;
     CameraWindow camera_;
+    ScanEffect scanEffect_;
     Toast toast_;
     RECT selectionOnScreen_{};
     std::vector<std::wstring> results_;  // Codes of the last read, largest first

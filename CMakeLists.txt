@@ -51,6 +51,7 @@ add_executable(Kodo WIN32
     src/app/history_window.cpp
     src/app/main.cpp
     src/app/result_popup.cpp
+    src/app/scan_effect.cpp
     src/app/screen_capture.cpp
     src/app/selection_overlay.cpp
     src/app/settings_dialog.cpp
@@ -61,7 +62,7 @@ add_executable(Kodo WIN32
 )
 target_link_libraries(Kodo PRIVATE kodocore gdi32 comctl32 comdlg32 dwmapi uxtheme winmm mfplat mf mfreadwrite mfuuid)
 # Ninja does not see the resource's #include: rebuild it when the version changes.
-set_source_files_properties(src/app/Kodo.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h)
+set_source_files_properties(src/app/Kodo.rc PROPERTIES OBJECT_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/version.h;${CMAKE_CURRENT_SOURCE_DIR}/assets/sounds/read.wav")
 # The manifest is embedded through Kodo.rc.
 target_link_options(Kodo PRIVATE /MANIFEST:NO)
 

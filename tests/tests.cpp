@@ -20,6 +20,7 @@
 #include <windows.h>
 #include <objbase.h>
 
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -669,6 +670,17 @@ HWND WaitForKodoWindow() {
 }
 
 }  // namespace
+
+TEST(ReadSoundIsEmbedded) {
+    if (!fs::exists(buildDir / L"Kodo.exe")) SKIP("Kodo.exe not built");
+    HMODULE exe = LoadLibraryExW((buildDir / L"Kodo.exe").c_str(), nullptr, LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE);
+    CHECK(exe);
+    HRSRC sound = FindResourceW(exe, MAKEINTRESOURCEW(2), L"WAVE");
+    CHECK(sound && SizeofResource(exe, sound) > 1000);
+    const auto* data = static_cast<const char*>(LockResource(LoadResource(exe, sound)));
+    CHECK(data && std::memcmp(data, "RIFF", 4) == 0 && std::memcmp(data + 8, "WAVE", 4) == 0);
+    FreeLibrary(exe);
+}
 
 TEST(SingleInstanceAndCleanShutdown) {
     if (!fs::exists(buildDir / L"Kodo.exe")) SKIP("Kodo.exe not built");

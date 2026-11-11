@@ -3,6 +3,7 @@
 #include "../version.h"
 
 IDI_KODO ICON "../../assets/kodo.ico"
+IDR_READ_SOUND WAVE "../../assets/sounds/read.wav"
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "Kodo.manifest"
 
 VS_VERSION_INFO VERSIONINFO

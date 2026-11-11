@@ -16,8 +16,6 @@
 #include <mmsystem.h>
 #include <windowsx.h>
 
-#include <cmath>
-
 namespace kodo {
 
 namespace {
@@ -49,34 +47,9 @@ const wchar_t* KindIcon(PayloadKind kind) {
     return icons::kText;
 }
 
-// A short soft beep, generated once as a WAV in memory.
-void PlayReadSound() {
-    static const std::vector<uint8_t> wav = [] {
-        constexpr uint32_t rate = 22050, samples = rate * 90 / 1000;
-        std::vector<uint8_t> data(44 + samples * 2);
-        const auto put32 = [&](size_t at, uint32_t v) { for (int i = 0; i < 4; ++i) data[at + i] = static_cast<uint8_t>(v >> (8 * i)); };
-        const auto put16 = [&](size_t at, uint16_t v) { data[at] = static_cast<uint8_t>(v); data[at + 1] = static_cast<uint8_t>(v >> 8); };
-        std::memcpy(&data[0], "RIFF", 4);
-        put32(4, static_cast<uint32_t>(data.size() - 8));
-        std::memcpy(&data[8], "WAVEfmt ", 8);
-        put32(16, 16);
-        put16(20, 1);
-        put16(22, 1);
-        put32(24, rate);
-        put32(28, rate * 2);
-        put16(32, 2);
-        put16(34, 16);
-        std::memcpy(&data[36], "data", 4);
-        put32(40, samples * 2);
-        for (uint32_t i = 0; i < samples; ++i) {
-            // 1.5 kHz with a quick fade so it does not click.
-            const double fade = std::min(1.0, std::min(i, samples - i) / (rate * 0.01));
-            const double value = std::sin(2 * 3.14159265358979 * 1500 * i / rate) * 0.25 * fade;
-            put16(44 + i * 2, static_cast<uint16_t>(static_cast<int16_t>(value * 32767)));
-        }
-        return data;
-    }();
-    PlaySoundW(reinterpret_cast<LPCWSTR>(wav.data()), nullptr, SND_MEMORY | SND_ASYNC | SND_NODEFAULT);
+// "Glass" from Kenney's Interface Sounds (CC0), embedded as a resource.
+void PlayReadSound(HINSTANCE instance) {
+    PlaySoundW(MAKEINTRESOURCEW(IDR_READ_SOUND), instance, SND_RESOURCE | SND_ASYNC | SND_NODEFAULT);
 }
 
 bool OpenWithShell(const std::wstring& target) {
@@ -105,7 +78,7 @@ bool TrayApp::Initialize(HINSTANCE instance, bool startedAtSignIn) {
     AddTrayIcon();
     EnableDarkMenus();
     if (!popup_.Create(instance) || !toast_.Create(instance) || !generator_.Create(instance) ||
-        !historyWindow_.Create(instance, &history_) || !camera_.Create(instance)) {
+        !historyWindow_.Create(instance, &history_) || !camera_.Create(instance) || !scanEffect_.Create(instance)) {
         return false;
     }
     popup_.onNext = [this] {
@@ -273,6 +246,7 @@ void TrayApp::Exit() {
     generator_.Destroy();
     historyWindow_.Destroy();
     camera_.Destroy();
+    scanEffect_.Destroy();
     UnregisterHotkeys();
     Shell_NotifyIconW(NIM_DELETE, &icon_);
     if (icon_.hIcon) DestroyIcon(icon_.hIcon);
@@ -310,6 +284,7 @@ void TrayApp::ReadCode() {
         },
         [this, texts] {
             captureActive_ = false;
+            if (!texts->empty()) scanEffect_.Play(selectionOnScreen_);
             FinishRead(std::move(*texts));
         });
 }
@@ -325,7 +300,7 @@ void TrayApp::FinishRead(std::vector<std::wstring> texts) {
         toast_.Show(selectionOnScreen_, L"No QR code found", Toast::Kind::Info);
         return;
     }
-    if (settings_.readSound) PlayReadSound();
+    if (settings_.readSound) PlayReadSound(instance_);
     for (auto it = texts.rbegin(); it != texts.rend(); ++it) Remember(HistoryEntry::Origin::Read, *it);
     results_ = std::move(texts);
     ShowResult(0);

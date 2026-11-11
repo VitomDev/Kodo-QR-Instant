@@ -1,7 +1,13 @@
 # Third-party notices
 
-Kodo QR Instant includes the following third-party software, statically linked into `Kodo.exe`.
+Kodo QR Instant includes the following third-party software and media, built into `Kodo.exe`.
 Everything else (screen capture, PNG images, clipboard, windows) uses Windows' own APIs.
+
+## Interface Sounds by Kenney
+
+The sound played when a code is read ("glass_002"), from the Interface Sounds pack.
+Source: https://kenney.nl/assets/interface-sounds
+License: Creative Commons Zero (CC0 1.0), public domain: https://creativecommons.org/publicdomain/zero/1.0/
 
 ## ZXing-C++ 3.1.1
 
