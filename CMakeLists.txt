@@ -60,6 +60,8 @@ add_executable(Kodo WIN32
     src/app/Kodo.rc
 )
 target_link_libraries(Kodo PRIVATE kodocore gdi32 comctl32 comdlg32 dwmapi uxtheme winmm mfplat mf mfreadwrite mfuuid)
+# Ninja does not see the resource's #include: rebuild it when the version changes.
+set_source_files_properties(src/app/Kodo.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h)
 # The manifest is embedded through Kodo.rc.
 target_link_options(Kodo PRIVATE /MANIFEST:NO)
 
