@@ -142,6 +142,8 @@ inline BOOL NotifyIcon(DWORD command, NOTIFYICONDATAW* data) {
             if (data->uFlags & NIF_ICON) state.data.hIcon = data->hIcon;
             if (data->uFlags & NIF_TIP) wcsncpy_s(state.data.szTip, data->szTip, _TRUNCATE);
             if (data->uFlags & NIF_MESSAGE) state.data.uCallbackMessage = data->uCallbackMessage;
+            // Al volver al área de notificaciones hay que reponer también lo que llegó después del alta.
+            state.addFlags |= data->uFlags & (NIF_ICON | NIF_TIP | NIF_MESSAGE | NIF_SHOWTIP);
             if (state.grouped) {
                 if (detail::SendToHost(NIM_MODIFY, *data, data->uFlags)) return TRUE;
                 detail::Ungroup();
