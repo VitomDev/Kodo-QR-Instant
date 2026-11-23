@@ -6,7 +6,7 @@
 ;
 ; Built by build.ps1, which passes /DBuildDir=<folder with Kodo.exe>.
 
-#define AppVersion "1.2.1"
+#define AppVersion "1.2.2"
 #define AppName "Kodo QR Instant"
 #define RunKey "Software\Microsoft\Windows\CurrentVersion\Run"
 #define StartupApprovedKey "Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run"
@@ -45,6 +45,10 @@ WizardStyle=modern
 LicenseFile=..\LICENSE
 ; Kodo is closed by the code below, through its own window.
 CloseApplications=no
+
+[Messages]
+; Shown above the license on the wizard's license page.
+LicenseLabel3=Kodo is free and open source. If you paid for it, you were scammed: the official download is only at github.com/VitomDev. Please read the license below and accept it to continue.
 
 [Files]
 Source: "{#BuildDir}\Kodo.exe"; DestDir: "{app}"; Flags: ignoreversion
